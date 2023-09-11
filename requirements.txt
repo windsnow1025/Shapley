@@ -1,0 +1,6 @@
+valda==0.1.10
+numpy
+matplotlib
+scikit-learn
+joblib
+torch
