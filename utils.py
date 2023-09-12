@@ -335,7 +335,7 @@ def visualize_accuracy(delete_ratios, cnn_accuracies_runs, logistic_accuracies, 
     cnn_pure_std = np.std(cnn_accuracies_pure)
 
     plt.errorbar(delete_ratios, cnn_means, yerr=cnn_stds, label='CNN (Noisy Data)')
-    plt.plot(delete_ratios, logistic_accuracies, label='Logistic Regression (Noisy Data)')
+    plt.plot(delete_ratios, logistic_accuracies, label='Logistic Regression (Poisoned Data)')
     plt.axhline(y=logistic_accuracy_pure, color='m', linestyle='--', label='Logistic Regression (Pure Data)')
     plt.axhspan(cnn_pure_mean - cnn_pure_std, cnn_pure_mean + cnn_pure_std, facecolor='c', alpha=0.2)
     plt.axhline(y=cnn_pure_mean, color='c', linestyle='--', label='CNN (Pure Data)')
