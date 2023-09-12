@@ -8,9 +8,14 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from valda.valuation import DataValuation
+from valda.eval import data_removal
+from valda.metrics import weighted_acc_drop
 
 
-def flip_labels(y, flip_fraction, num_classes):
+def flip_labels(y, flip_fraction):
+    num_classes = len(np.unique(y))
+
     # Determine the number of labels to flip
     num_flips = int(len(y) * flip_fraction)
 
@@ -18,13 +23,17 @@ def flip_labels(y, flip_fraction, num_classes):
     flip_indices = np.random.choice(len(y), size=num_flips, replace=False)
 
     # Flip the chosen labels
+    y_flipped = y.copy()
     for idx in flip_indices:
-        y[idx] = (y[idx] + np.random.randint(1, num_classes)) % num_classes
+        y_flipped[idx] = (y[idx] + np.random.randint(1, num_classes)) % num_classes
 
-    return y, flip_indices
+    # Convert labels to integers
+    y_flipped = y_flipped.astype(int)
+
+    return y_flipped, flip_indices
 
 
-def load_data(train_total, dev_size, test_size, flip_fraction=0.3):
+def load_data(train_total, dev_size, test_size):
     # Check if the data directory exists
     if not os.path.exists('./dataset'):
         os.makedirs('./dataset')
@@ -50,12 +59,7 @@ def load_data(train_total, dev_size, test_size, flip_fraction=0.3):
     X_test = X[-test_size:]
     y_test = y[-test_size:]
 
-    # Flip labels in the train set
-    num_classes = len(np.unique(y))
-    y_train, flip_indices = flip_labels(y_train, flip_fraction, num_classes)
-    y_train = y_train.astype(int)
-
-    return X_train, y_train, X_dev, y_dev, X_test, y_test, flip_indices
+    return X_train, y_train, X_dev, y_dev, X_test, y_test
 
 
 class LeNet(nn.Module):
@@ -154,6 +158,70 @@ def cnn_tests(X_train, y_train, X_test, y_test, runs=8):
     cnn_accuracy = np.mean(cnn_accuracies)
 
     return cnn_accuracy, cnn_accuracies
+
+
+def shap_comparison(X_train, y_train, X_test, y_test, remove_high_value=False, vals_rand=None, vals_loo=None, vals_tmc=None, vals_beta=None, vals_cs=None, vals_inf=None):
+    if vals_rand is not None:
+        accs_rand = data_removal(vals_rand, X_train, y_train, X_test, y_test, remove_high_value=remove_high_value)
+    if vals_loo is not None:
+        accs_loo = data_removal(vals_loo, X_train, y_train, X_test, y_test, remove_high_value=remove_high_value)
+    if vals_tmc is not None:
+        accs_tmc = data_removal(vals_tmc, X_train, y_train, X_test, y_test, remove_high_value=remove_high_value)
+    if vals_beta is not None:
+        accs_beta = data_removal(vals_beta, X_train, y_train, X_test, y_test, remove_high_value=remove_high_value)
+    if vals_cs is not None:
+        accs_cs = data_removal(vals_cs, X_train, y_train, X_test, y_test, remove_high_value=remove_high_value)
+    if vals_inf is not None:
+        accs_inf = data_removal(vals_inf, X_train, y_train, X_test, y_test, remove_high_value=remove_high_value)
+
+    train_size = len(X_train)
+    removal_percentages = [(i/train_size) * 100 for i in range(train_size)]
+
+    if vals_rand is not None:
+        plt.plot(removal_percentages, accs_rand, label='Rand')
+    if vals_loo is not None:
+        plt.plot(removal_percentages, accs_loo, label='LOO')
+    if vals_tmc is not None:
+        plt.plot(removal_percentages, accs_tmc, label='TMC')
+    if vals_beta is not None:
+        plt.plot(removal_percentages, accs_beta, label='Beta')
+    if vals_cs is not None:
+        plt.plot(removal_percentages, accs_cs, label='CS')
+    if vals_inf is not None:
+        plt.plot(removal_percentages, accs_inf, label='Inf')
+
+    plt.xlabel('Data Removal Percentage (%)')
+    plt.ylabel('Accuracy')
+    plt.title('Accuracy vs. Ascending Data Removal Percentage')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    if vals_rand is not None:
+        res_rand = weighted_acc_drop(accs_rand)
+    if vals_loo is not None:
+        res_loo = weighted_acc_drop(accs_loo)
+    if vals_tmc is not None:
+        res_tmc = weighted_acc_drop(accs_tmc)
+    if vals_beta is not None:
+        res_beta = weighted_acc_drop(accs_beta)
+    if vals_cs is not None:
+        res_cs = weighted_acc_drop(accs_cs)
+    if vals_inf is not None:
+        res_inf = weighted_acc_drop(accs_inf)
+
+    if vals_rand is not None:
+        print("The weighted accuracy drop for Rand is {:.3f}".format(res_rand))
+    if vals_loo is not None:
+        print("The weighted accuracy drop for LOO is {:.3f}".format(res_loo))
+    if vals_tmc is not None:
+        print("The weighted accuracy drop for TMC is {:.3f}".format(res_tmc))
+    if vals_beta is not None:
+        print("The weighted accuracy drop for Beta is {:.3f}".format(res_beta))
+    if vals_cs is not None:
+        print("The weighted accuracy drop for CS is {:.3f}".format(res_cs))
+    if vals_inf is not None:
+        print("The weighted accuracy drop for Inf is {:.3f}".format(res_inf))
 
 
 def visualize_min_indices(X_raw, y_raw, min_indices):
