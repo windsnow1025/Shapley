@@ -174,8 +174,8 @@ def shap_comparison(X_train, y_train, X_test, y_test, remove_high_value=False, v
     if vals_inf is not None:
         accs_inf = data_removal(vals_inf, X_train, y_train, X_test, y_test, remove_high_value=remove_high_value)
 
-    train_size = len(X_train)
-    removal_percentages = [(i/train_size) * 100 for i in range(train_size)]
+    accs_len = len(X_train) + 1
+    removal_percentages = [(i/accs_len) * 100 for i in range(accs_len)]
 
     if vals_rand is not None:
         plt.plot(removal_percentages, accs_rand, label='Rand')
