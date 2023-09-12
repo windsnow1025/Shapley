@@ -197,6 +197,7 @@ def shap_comparison(X_train, y_train, X_test, y_test, remove_high_value=False, v
     plt.grid(True)
     plt.show()
 
+    res_rand, res_loo, res_tmc, res_beta, res_cs, res_inf = None, None, None, None, None, None
     if vals_rand is not None:
         res_rand = weighted_acc_drop(accs_rand)
     if vals_loo is not None:
@@ -222,6 +223,8 @@ def shap_comparison(X_train, y_train, X_test, y_test, remove_high_value=False, v
         print("The weighted accuracy drop for CS is {:.3f}".format(res_cs))
     if vals_inf is not None:
         print("The weighted accuracy drop for Inf is {:.3f}".format(res_inf))
+
+    return res_rand, res_loo, res_tmc, res_beta, res_cs, res_inf
 
 
 def visualize_min_indices(X_raw, y_raw, min_indices):
@@ -309,10 +312,10 @@ def calculate_metrics(matrix):
     return accuracy, precision, recall, f1_score, specificity
 
 
-def delete_data(X, y, total_min_indices, delete_ratio):
-    num_delete = int(len(total_min_indices) * delete_ratio)
+def delete_data(X, y, min_indices, delete_ratio):
+    num_delete = int(len(min_indices) * delete_ratio)
 
-    delete_indices = total_min_indices[:num_delete]
+    delete_indices = min_indices[:num_delete]
 
     X_cleaned = np.delete(X, delete_indices, axis=0)
     y_cleaned = np.delete(y, delete_indices, axis=0)
