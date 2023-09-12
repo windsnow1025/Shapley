@@ -192,7 +192,10 @@ def shap_comparison(X_train, y_train, X_test, y_test, remove_high_value=False, v
 
     plt.xlabel('Data Removal Percentage (%)')
     plt.ylabel('Accuracy')
-    plt.title('Accuracy vs. Ascending Data Removal Percentage')
+    if remove_high_value is False:
+        plt.title('Accuracy vs. Ascending Data Removal Percentage')
+    elif remove_high_value is True:
+        plt.title('Accuracy vs. Descending Data Removal Percentage')
     plt.legend()
     plt.grid(True)
     plt.show()
