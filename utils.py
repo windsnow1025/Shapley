@@ -33,7 +33,7 @@ def flip_labels(y, flip_fraction):
     return y_flipped, flip_indices
 
 
-def load_data(train_total, dev_size, test_size):
+def load_data(train_size, dev_size, test_size):
     # Check if the data directory exists
     if not os.path.exists('./dataset'):
         os.makedirs('./dataset')
@@ -52,48 +52,43 @@ def load_data(train_total, dev_size, test_size):
     y = y.astype(int)
 
     # Split the data into train / dev / test sets
-    X_train = X[:train_total]
-    y_train = y[:train_total]
-    X_dev = X[train_total:train_total + dev_size]
-    y_dev = y[train_total:train_total + dev_size]
+    X_train = X[:train_size]
+    y_train = y[:train_size]
+    X_dev = X[train_size:train_size + dev_size]
+    y_dev = y[train_size:train_size + dev_size]
     X_test = X[-test_size:]
     y_test = y[-test_size:]
 
     return X_train, y_train, X_dev, y_dev, X_test, y_test
 
 
-class LeNet(nn.Module):
+class LeNet5(nn.Module):
 
-    # network structure
     def __init__(self):
-        super(LeNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 6, 5, padding=2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+        super().__init__()
+
+        self.features = nn.Sequential(
+            nn.Conv2d(1, 6, kernel_size=5, padding=2),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Conv2d(6, 16, kernel_size=5),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2)
+        )
+
+        self.classifier = nn.Sequential(
+            nn.Linear(16 * 5 * 5, 120),
+            nn.ReLU(),
+            nn.Linear(120, 84),
+            nn.ReLU(),
+            nn.Linear(84, 10)
+        )
 
     def forward(self, x):
-        """
-        One forward pass through the network.
-
-        Args:
-            x: input
-        """
-        x = nn.functional.max_pool2d(nn.functional.relu(self.conv1(x)), (2, 2))
-        x = nn.functional.max_pool2d(nn.functional.relu(self.conv2(x)), (2, 2))
-        x = x.view(-1, self.num_flat_features(x))
-        x = nn.functional.relu(self.fc1(x))
-        x = nn.functional.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
-
-    def num_flat_features(self, x):
-        """
-        Get the number of features in a batch of tensors `x`.
-        """
-        size = x.size()[1:]
-        return np.prod(size)
+        x = self.features(x)
+        x = torch.flatten(x, 1)
+        logit = self.classifier(x)
+        return logit
 
 
 def cnn_test(X_train, y_train, X_test, y_test):
@@ -111,7 +106,7 @@ def cnn_test(X_train, y_train, X_test, y_test):
     y_test = torch.tensor(y_test, dtype=torch.long).to(device)
 
     # Create the CNN model and move to GPU
-    model = LeNet().to(device)
+    model = LeNet5().to(device)
     criterion = nn.CrossEntropyLoss()
     learning_rate = 0.001
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
