@@ -13,26 +13,6 @@ from valda.eval import data_removal
 from valda.metrics import weighted_acc_drop
 
 
-def flip_labels(y, flip_fraction):
-    num_classes = len(np.unique(y))
-
-    # Determine the number of labels to flip
-    num_flips = int(len(y) * flip_fraction)
-
-    # Randomly choose indices of labels to flip
-    flip_indices = np.random.choice(len(y), size=num_flips, replace=False)
-
-    # Flip the chosen labels
-    y_flipped = y.copy()
-    for idx in flip_indices:
-        y_flipped[idx] = (y[idx] + np.random.randint(1, num_classes)) % num_classes
-
-    # Convert labels to integers
-    y_flipped = y_flipped.astype(int)
-
-    return y_flipped, flip_indices
-
-
 def load_data(train_size, dev_size, test_size):
     # Check if the data directory exists
     if not os.path.exists('./dataset'):
@@ -51,15 +31,35 @@ def load_data(train_size, dev_size, test_size):
     # Convert labels to integers
     y = y.astype(int)
 
-    # Split the data into train / dev / test sets
+    # Split the data into train, dev, test sets
     X_train = X[:train_size]
     y_train = y[:train_size]
     X_dev = X[train_size:train_size + dev_size]
     y_dev = y[train_size:train_size + dev_size]
-    X_test = X[-test_size:]
-    y_test = y[-test_size:]
+    X_test = X[train_size + dev_size:train_size + dev_size + test_size]
+    y_test = y[train_size + dev_size:train_size + dev_size + test_size]
 
     return X_train, y_train, X_dev, y_dev, X_test, y_test
+
+
+def flip_labels(y, flip_fraction):
+    num_classes = len(np.unique(y))
+
+    # Determine the number of labels to flip
+    num_flips = int(len(y) * flip_fraction)
+
+    # Randomly choose indices of labels to flip
+    flip_indices = np.random.choice(len(y), size=num_flips, replace=False)
+
+    # Flip the chosen labels
+    y_flipped = y.copy()
+    for idx in flip_indices:
+        y_flipped[idx] = (y[idx] + np.random.randint(1, num_classes)) % num_classes
+
+    # Convert labels to integers
+    y_flipped = y_flipped.astype(int)
+
+    return y_flipped, flip_indices
 
 
 class LeNet5(nn.Module):
