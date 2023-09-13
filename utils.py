@@ -326,17 +326,16 @@ def delete_data(X, y, min_indices, delete_ratio):
     return X_cleaned, y_cleaned
 
 
-def visualize_accuracy(delete_ratios, cnn_accuracies_runs, logistic_accuracies, cnn_accuracies_pure,
-                       logistic_accuracy_pure):
-    cnn_means = [np.mean(acc) for acc in cnn_accuracies_runs]
-    cnn_stds = [np.std(acc) for acc in cnn_accuracies_runs]
+def visualize_accuracy(delete_ratios, cnn_accs, logistic_accs, cnn_accs_pure, logistic_acc_pure):
+    cnn_means = [np.mean(acc) for acc in cnn_accs]
+    cnn_stds = [np.std(acc) for acc in cnn_accs]
 
-    cnn_pure_mean = np.mean(cnn_accuracies_pure)
-    cnn_pure_std = np.std(cnn_accuracies_pure)
+    cnn_pure_mean = np.mean(cnn_accs_pure)
+    cnn_pure_std = np.std(cnn_accs_pure)
 
-    plt.errorbar(delete_ratios, cnn_means, yerr=cnn_stds, label='CNN (Noisy Data)')
-    plt.plot(delete_ratios, logistic_accuracies, label='Logistic Regression (Poisoned Data)')
-    plt.axhline(y=logistic_accuracy_pure, color='m', linestyle='--', label='Logistic Regression (Pure Data)')
+    plt.errorbar(delete_ratios, cnn_means, yerr=cnn_stds, label='CNN (Poisoned Data)')
+    plt.plot(delete_ratios, logistic_accs, label='Logistic Regression (Poisoned Data)')
+    plt.axhline(y=logistic_acc_pure, color='m', linestyle='--', label='Logistic Regression (Pure Data)')
     plt.axhspan(cnn_pure_mean - cnn_pure_std, cnn_pure_mean + cnn_pure_std, facecolor='c', alpha=0.2)
     plt.axhline(y=cnn_pure_mean, color='c', linestyle='--', label='CNN (Pure Data)')
 
@@ -344,4 +343,9 @@ def visualize_accuracy(delete_ratios, cnn_accuracies_runs, logistic_accuracies, 
     plt.ylabel('Accuracy')
     plt.title('Accuracy vs Delete Ratio')
     plt.legend()
+    plt.grid()
+
+    # Customize the ticks on the x and y axis
+    plt.yticks(np.arange(0.4, 1.05, 0.05))
+
     plt.show()
