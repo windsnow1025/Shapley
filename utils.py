@@ -11,6 +11,7 @@ import torch.optim as optim
 from valda.valuation import DataValuation
 from valda.eval import data_removal
 from valda.metrics import weighted_acc_drop
+import seaborn as sns
 
 
 def load_data(train_size, dev_size, test_size):
@@ -253,7 +254,7 @@ def visualize_min_indices(X_raw, y_raw, min_indices):
 
 
 def create_confusion_matrix(total_min_indices, flip_indices, len_X):
-    matrix = np.zeros((2, 2))
+    matrix = np.zeros((2, 2), dtype=int)
 
     for i in range(len_X):
         if i in flip_indices and i in total_min_indices:
@@ -268,21 +269,31 @@ def create_confusion_matrix(total_min_indices, flip_indices, len_X):
     return matrix
 
 
-def plot_confusion_matrix(matrix):
-    fig, ax = plt.subplots()
-    im = ax.imshow(matrix, cmap='Blues')
+def plot_confusion_matrix_with_metrics(matrix):
+    # Calculate metrics
+    accuracy, precision, recall, f1_score, specificity = calculate_metrics(matrix)
 
-    ax.set_xticks(np.arange(2))
-    ax.set_yticks(np.arange(2))
-    ax.set_xticklabels(['Flip', 'Not Flip'])
-    ax.set_yticklabels(['Neg', 'Not Neg'])
+    fig = plt.figure(figsize=(4, 5))
 
-    for i in range(2):
-        for j in range(2):
-            text = ax.text(j, i, matrix[i, j], ha="center", va="center", color="black")
+    # Create the heatmap axis occupying the top part of the figure
+    ax1 = fig.add_axes([0, 0.25, 1, 0.75])
+    sns.heatmap(matrix, annot=True, fmt="d", cmap='Blues', ax=ax1)
+    ax1.set_aspect(1)
+    ax1.set_xticks(np.arange(2))
+    ax1.set_yticks(np.arange(2))
+    ax1.set_xticklabels(['Flip', 'Not Flip'])
+    ax1.set_yticklabels(['Neg', 'Not Neg'])
+    ax1.set_title("Confusion Matrix")
 
-    ax.set_title("Confusion Matrix")
-    fig.tight_layout()
+    # Create an axis for the metrics text directly below the heatmap
+    ax2 = fig.add_axes([0, 0, 1, 0.25])
+
+    # Display the metrics on the bottom subplot
+    metrics_text = f'Accuracy: {accuracy:.2f}\nPrecision: {precision:.2f}\nRecall: {recall:.2f}\nF1 Score: {f1_score:.2f}\nSpecificity: {specificity:.2f}'
+    ax2.axis('off')
+    ax2.text(0.4, 0.5, metrics_text, ha="center", va="center", transform=ax2.transAxes)
+
+    plt.tight_layout()
     plt.show()
 
 
