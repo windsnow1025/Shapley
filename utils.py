@@ -273,7 +273,7 @@ def plot_confusion_matrix_with_metrics(matrix):
     # Calculate metrics
     accuracy, precision, recall, f1_score, specificity = calculate_metrics(matrix)
 
-    fig = plt.figure(figsize=(4, 5))
+    fig = plt.figure(figsize=(3, 4))
 
     # Create the heatmap axis occupying the top part of the figure
     ax1 = fig.add_axes([0, 0.25, 1, 0.75])
@@ -293,7 +293,6 @@ def plot_confusion_matrix_with_metrics(matrix):
     ax2.axis('off')
     ax2.text(0.4, 0.5, metrics_text, ha="center", va="center", transform=ax2.transAxes)
 
-    plt.tight_layout()
     plt.show()
 
 
