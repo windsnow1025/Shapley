@@ -6,7 +6,7 @@ from valda.valuation import DataValuation
 train_size = 1000
 train_start = 0
 train_size_batch = 200
-dev_size = 300
+dev_size = 400
 test_size = 1000
 np.random.seed(0)
 torch.manual_seed(0)
