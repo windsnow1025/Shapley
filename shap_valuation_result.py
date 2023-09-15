@@ -3,7 +3,6 @@ import numpy as np
 import torch
 
 train_size = 1000
-train_start = 0
 train_size_batch = 200
 dev_size = 400
 test_size = 1000

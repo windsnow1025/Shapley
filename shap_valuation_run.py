@@ -4,7 +4,6 @@ import torch
 from valda.valuation import DataValuation
 
 train_size = 1000
-train_start = 0
 train_size_batch = 100
 dev_size = 500
 test_size = 1000
