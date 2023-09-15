@@ -4,9 +4,7 @@ import time
 import torch
 from valda.valuation import DataValuation
 
-train_size = 1000
-train_start = 0
-train_size_batch = 200
+train_size = 200
 dev_size = 400
 test_size = 1000
 np.random.seed(0)
@@ -15,11 +13,9 @@ torch.manual_seed(0)
 # Load data
 X_train, y_train_clean, X_dev, y_dev, X_test, y_test = load_data(train_size, dev_size, test_size)
 y_train, flip_indices = flip_labels(y_train_clean, flip_fraction=0.3)
-X_train_batch = X_train[train_start:train_start+train_size_batch]
-y_train_batch = y_train[train_start:train_start+train_size_batch]
 
 # Define a DataValuation instance
-dv = DataValuation(X_train_batch, y_train_batch, X_dev, y_dev)
+dv = DataValuation(X_train, y_train, X_dev, y_dev)
 
 # Run valuation
 start_time = time.time()
