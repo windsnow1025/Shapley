@@ -3,8 +3,8 @@ import numpy as np
 import torch
 
 train_size = 1000
-train_size_batch = 200
-dev_size = 400
+train_size_batch = 100
+dev_size = 500
 test_size = 1000
 np.random.seed(0)
 torch.manual_seed(0)
