@@ -3,9 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-train_size = 1000
-train_start = 0
-train_size_batch = 200
+train_size = 200
 dev_size = 400
 test_size = 1000
 np.random.seed(0)
@@ -14,8 +12,6 @@ torch.manual_seed(0)
 # Load data
 X_train, y_train_clean, X_dev, y_dev, X_test, y_test = load_data(train_size, dev_size, test_size)
 y_train, flip_indices = flip_labels(y_train_clean, flip_fraction=0.3)
-X_train_batch = X_train[train_start:train_start+train_size_batch]
-y_train_batch = y_train[train_start:train_start+train_size_batch]
 
 # Load the results
 vals_loo = np.load('data/vals_time/vals_loo.npy', allow_pickle=True)
@@ -35,14 +31,14 @@ vals_cs = vals_cs.item()
 
 # Create vals_rand dictionary
 vals_rand = {}
-for i in range(train_size_batch):
+for i in range(X_train):
     vals_rand[i] = np.random.rand()
 time_rand = 0
 
 # Plot the results
 # Ascending
 acc_rand_asc, acc_loo_asc, acc_tmc_asc, acc_beta_asc, acc_cs_asc, _ = shap_comparison(
-    X_train_batch, y_train_batch, X_test, y_test,
+    X_train, y_train, X_test, y_test,
     remove_high_value=False,
     vals_rand=vals_rand,
     vals_loo=vals_loo,
@@ -52,7 +48,7 @@ acc_rand_asc, acc_loo_asc, acc_tmc_asc, acc_beta_asc, acc_cs_asc, _ = shap_compa
 
 # Descending
 acc_rand_des, acc_loo_des, acc_tmc_des, acc_beta_des, acc_cs_des, _ = shap_comparison(
-    X_train_batch, y_train_batch, X_test, y_test,
+    X_train, y_train, X_test, y_test,
     remove_high_value=True,
     vals_rand=vals_rand,
     vals_loo=vals_loo,
