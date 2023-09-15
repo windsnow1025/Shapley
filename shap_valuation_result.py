@@ -27,7 +27,7 @@ confusion_matrix = create_confusion_matrix(min_indices, flip_indices, train_size
 plot_confusion_matrix_with_metrics(confusion_matrix)
 
 # Train and test the models on pure dataset
-cnn_accuracy_pure, cnn_accuracies_pure = cnn_tests(X_train, y_train_clean, X_test, y_test, runs=16)
+cnn_accuracy_pure, cnn_accuracies_pure = cnn_tests(X_train, y_train_clean, X_test, y_test, runs=64)
 print('CNN accuracy on pure dataset: {}'.format(cnn_accuracy_pure))
 
 logistic_accuracy_pure = logistic_test(X_train, y_train_clean, X_test, y_test)
