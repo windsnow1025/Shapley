@@ -16,12 +16,12 @@ y_train, flip_indices = flip_labels(y_train_clean, flip_fraction=0.3)
 # Merge the all indices file to the total indices file
 min_indices = np.array([])
 for train_start in range(0, train_size, train_size_batch):
-    file_path = f'./data/min_indices_{str(train_start).zfill(3)}-{str(train_start+train_size_batch-1).zfill(3)}_{dev_size}.npy'
+    file_path = f'./data/batch/min_indices_{str(train_start).zfill(3)}-{str(train_start+train_size_batch-1).zfill(3)}_{dev_size}.npy'
     if os.path.isfile(file_path):
         old_data = np.load(file_path)
         min_indices = np.concatenate((min_indices, old_data))
 min_indices = min_indices.astype(int)
-np.save(f'./data/min_indices_{train_size_batch}_{dev_size}.npy', min_indices)
+np.save(f'./data/merged/min_indices_{train_size_batch}_{dev_size}.npy', min_indices)
 
 # Confusion Matrix and Metrics
 confusion_matrix = create_confusion_matrix(min_indices, flip_indices, train_size)
@@ -35,8 +35,6 @@ logistic_accuracy_pure = logistic_test(X_train, y_train_clean, X_test, y_test)
 print('Logistic Regression accuracy on pure dataset: {}'.format(logistic_accuracy_pure))
 
 # Train models on the dataset with different delete ratios
-min_indices = np.load(f'./data/min_indices_{train_size_batch}_{dev_size}.npy')
-
 delete_ratios = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 
 cnn_accuracy = np.zeros(len(delete_ratios))
