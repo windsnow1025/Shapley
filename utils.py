@@ -1,44 +1,62 @@
 from matplotlib import pyplot as plt
-import sklearn
 from sklearn import linear_model
-from sklearn.datasets import fetch_openml
+from keras.datasets import cifar10, mnist
 import joblib
 import numpy as np
 import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from valda.valuation import DataValuation
 from valda.eval import data_removal
 from valda.metrics import weighted_acc_drop
 import seaborn as sns
 
 
-def load_data(train_size, dev_size, test_size):
+def load_data(dataset_type, train_size, dev_size, test_size):
     # Check if the data directory exists
     if not os.path.exists('./dataset'):
         os.makedirs('./dataset')
 
-    # Check if the MNIST dataset is already saved
-    if os.path.exists('./dataset/mnist.pkl'):
-        X, y = joblib.load('./dataset/mnist.pkl')
-    else:
-        # Load MNIST data
-        X, y = fetch_openml('mnist_784', version=1, return_X_y=True, as_frame=False, parser="auto")
+    if dataset_type == 'MNIST':
+        # Check if the MNIST dataset is already saved
+        if os.path.exists('./dataset/mnist.pkl'):
+            (X_train, y_train), (X_test, y_test) = joblib.load('./dataset/mnist.pkl')
+        else:
+            # Load MNIST data
+            (X_train, y_train), (X_test, y_test) = mnist.load_data()
 
-        # Save the MNIST dataset
-        joblib.dump((X, y), './dataset/mnist.pkl')
+            # Save the MNIST dataset
+            joblib.dump(((X_train, y_train), (X_test, y_test)), './dataset/mnist.pkl')
+
+    elif dataset_type == 'CIFAR':
+        # Check if the CIFAR dataset is already saved
+        if os.path.exists('./dataset/cifar.pkl'):
+            (X_train, y_train), (X_test, y_test) = joblib.load('./dataset/cifar.pkl')
+        else:
+            # Load CIFAR data
+            (X_train, y_train), (X_test, y_test) = cifar10.load_data()
+
+            # Save the CIFAR dataset
+            joblib.dump(((X_train, y_train), (X_test, y_test)), './dataset/cifar.pkl')
+
+    else:
+        raise ValueError("Invalid dataset type. Expected 'MNIST' or 'CIFAR'.")
 
     # Convert labels to integers
-    y = y.astype(int)
+    y_train = y_train.astype(int)
+    y_test = y_test.astype(int)
+
+    # Flatten the data
+    X_train = X_train.reshape(X_train.shape[0], -1)
+    X_test = X_test.reshape(X_test.shape[0], -1)
 
     # Split the data into train, dev, test sets
-    X_train = X[:train_size]
-    y_train = y[:train_size]
-    X_dev = X[train_size:train_size + dev_size]
-    y_dev = y[train_size:train_size + dev_size]
-    X_test = X[train_size + dev_size:train_size + dev_size + test_size]
-    y_test = y[train_size + dev_size:train_size + dev_size + test_size]
+    X_dev = X_train[-dev_size:]
+    y_dev = y_train[-dev_size:]
+    X_train = X_train[:train_size]
+    y_train = y_train[:train_size]
+    X_test = X_test[:test_size]
+    y_test = y_test[:test_size]
 
     return X_train, y_train, X_dev, y_dev, X_test, y_test
 
@@ -65,7 +83,7 @@ def flip_labels(y, flip_fraction):
 
 class LeNet5(nn.Module):
 
-    def __init__(self):
+    def __init__(self, num_classes=10):
         super().__init__()
 
         self.features = nn.Sequential(
@@ -82,7 +100,7 @@ class LeNet5(nn.Module):
             nn.ReLU(),
             nn.Linear(120, 84),
             nn.ReLU(),
-            nn.Linear(84, 10)
+            nn.Linear(84, num_classes)
         )
 
     def forward(self, x):
@@ -97,8 +115,14 @@ def cnn_test(X_train, y_train, X_test, y_test):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Reshape the data from 784 to 28x28
-    X_train = X_train.reshape(-1, 1, 28, 28)
-    X_test = X_test.reshape(-1, 1, 28, 28)
+    if X_train.shape[1] == 784: # MNIST
+        X_train = X_train.reshape(-1, 1, 28, 28)
+        X_test = X_test.reshape(-1, 1, 28, 28)
+        num_classes = 10
+    elif X_train.shape[1] == 3072: # CIFAR
+        X_train = X_train.reshape(-1, 3, 32, 32)
+        X_test = X_test.reshape(-1, 3, 32, 32)
+        num_classes = 10
 
     # Convert numpy arrays to PyTorch tensors
     X_train = torch.tensor(X_train, dtype=torch.float32).to(device)
@@ -107,7 +131,7 @@ def cnn_test(X_train, y_train, X_test, y_test):
     y_test = torch.tensor(y_test, dtype=torch.long).to(device)
 
     # Create the CNN model and move to GPU
-    model = LeNet5().to(device)
+    model = LeNet5(num_classes=num_classes).to(device)
     criterion = nn.CrossEntropyLoss()
     learning_rate = 0.001
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
